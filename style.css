@@ -108,7 +108,7 @@ body {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(160deg, rgba(10,25,16,0.88) 0%, rgba(10,25,16,0.80) 100%);
+  background: linear-gradient(to right, rgba(10,25,16,0.88) 0%, rgba(10,25,16,0.88) 50%, rgba(10,25,16,0.70) 100%);
   z-index: 0;
 }
 
@@ -136,6 +136,7 @@ body {
   line-height: 1.2;
   color: var(--white);
   margin-bottom: 24px;
+  text-shadow: 0 1px 8px rgba(0,0,0,0.6);
 }
 
 .lead {
@@ -143,6 +144,7 @@ body {
   color: #ffffff;
   margin-bottom: 36px;
   line-height: 1.7;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.7);
 }
 
 /* --- BUTTONS --- */
