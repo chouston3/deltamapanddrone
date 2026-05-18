@@ -108,7 +108,7 @@ body {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(160deg, rgba(15,35,24,0.82) 0%, rgba(15,35,24,0.72) 100%);
+  background: linear-gradient(160deg, rgba(10,25,16,0.88) 0%, rgba(10,25,16,0.80) 100%);
   z-index: 0;
 }
 
@@ -140,7 +140,7 @@ body {
 
 .lead {
   font-size: 1.1rem;
-  color: #c8d4cc;
+  color: #ffffff;
   margin-bottom: 36px;
   line-height: 1.7;
 }
