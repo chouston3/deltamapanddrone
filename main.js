@@ -1,4 +1,4 @@
-// Delta Mapping and Drone — main.js
+// Delta Map and Drone — main.js
 
 // Smooth scroll for nav links
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
