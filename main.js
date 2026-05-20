@@ -26,43 +26,40 @@ const form = document.getElementById('contactForm');
 const status = document.getElementById('form-status');
 
 if (form) {
-  form.addEventListener('submit', async function(e) {
-    e.preventDefault();
+    form.addEventListener('submit', async function(e) {
+          e.preventDefault();
+          const btn = form.querySelector('button[type="submit"]');
+          btn.disabled = true;
+          btn.textContent = 'Sending...';
+          status.className = 'form-status';
+          status.textContent = '';
 
-    const btn = form.querySelector('button[type="submit"]');
-    btn.disabled = true;
-    btn.textContent = 'Sending...';
-    status.className = 'form-status';
-    status.textContent = '';
+                              const formData = new FormData(form);
+          const data = Object.fromEntries(formData);
 
-    const data = {
-      name:    form.name.value.trim(),
-      phone:   form.phone.value.trim(),
-      email:   form.email.value.trim(),
-      acres:   form.acres.value.trim(),
-      message: form.message.value.trim(),
-    };
-
-    try {
-      const res = await fetch('/api/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-
-      if (res.ok) {
-        status.className = 'form-status success';
-        status.textContent = 'Message sent. We will be in touch.';
-        form.reset();
-      } else {
-        throw new Error('Server error');
-      }
-    } catch (err) {
-      status.className = 'form-status error';
-      status.textContent = 'Something went wrong. Email us directly at houston.chip@protonmail.com';
-    } finally {
-      btn.disabled = false;
-      btn.textContent = 'Send →';
-    }
-  });
+                              try {
+                                      const res = await fetch('https://api.web3forms.com/submit', {
+                                                method: 'POST',
+                                                headers: {
+                                                            'Content-Type': 'application/json',
+                                                            'Accept': 'application/json'
+                                                },
+                                                body: JSON.stringify(data),
+                                      });
+                                      const result = await res.json();
+                                      if (result.success) {
+                                                status.className = 'form-status success';
+                                                status.textContent = 'Message sent. We will be in touch.';
+                                                form.reset();
+                                      } else {
+                                                throw new Error(result.message || 'Server error');
+                                      }
+                              } catch (err) {
+                                      status.className = 'form-status error';
+                                      status.textContent = 'Something went wrong. Email us directly at chip@deltamapdrone.com';
+                              } finally {
+                                      btn.disabled = false;
+                                      btn.textContent = 'Send →';
+                              }
+    });
 }
