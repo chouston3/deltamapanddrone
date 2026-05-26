@@ -1,0 +1,24 @@
+<svg width="240" height="240" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Delta Map and Drone">
+  <title>Delta Map and Drone</title>
+
+  <defs>
+    <clipPath id="deltaClipFav">
+      <polygon points="120,40 200,178 40,178"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#deltaClipFav)">
+    <path d="M 20,68 Q 70,56 120,66 Q 170,76 220,64" fill="none" stroke="#7A4E2D" stroke-width="3.2"/>
+    <path d="M 20,90 Q 70,80 120,88 Q 170,96 220,84" fill="none" stroke="#7A4E2D" stroke-width="3.2"/>
+    <path d="M 20,112 Q 70,102 120,108 Q 170,116 220,104" fill="none" stroke="#7A4E2D" stroke-width="3.2"/>
+    <path d="M 20,134 Q 70,126 120,130 Q 170,136 220,126" fill="none" stroke="#7A4E2D" stroke-width="3.2"/>
+    <path d="M 20,156 Q 70,150 120,152 Q 170,156 220,148" fill="none" stroke="#7A4E2D" stroke-width="3.2"/>
+  </g>
+
+  <polygon points="120,40 200,178 40,178" fill="none" stroke="#2D4A2B" stroke-width="6" stroke-linejoin="round"/>
+
+  <line x1="108" y1="98" x2="132" y2="98" stroke="#2D4A2B" stroke-width="3.5" stroke-linecap="round"/>
+  <circle cx="108" cy="98" r="4" fill="#2D4A2B"/>
+  <circle cx="132" cy="98" r="4" fill="#2D4A2B"/>
+  <rect x="116" y="94" width="8" height="8" rx="1.5" fill="#2D4A2B"/>
+</svg>
