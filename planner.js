@@ -256,13 +256,13 @@ async function select(id){
   const rain48={};
   days.forEach(d=>{const i0=idxOf[d+'T00:00'];let s=0;if(i0!=null)for(let k=Math.max(0,i0-48);k<i0;k++)s+=P.precipitation[k]||0;rain48[d]=s});
 
-  cur={f,cfg,gdd,clamped,stage,pct,turf,primes,byDay,days,noonByDay,rain48,updated:new Date()};
+  cur={f,cfg,gdd,clamped,stage,pct,turf,primes,byDay,days,noonByDay,rain48,today,nowHour:(data.current&&data.current.time)?(parseInt(data.current.time.slice(11,13),10)+(parseInt(data.current.time.slice(14,16),10)||0)/60):-1,updated:new Date()};
   render();
 }
 
 function render(){
   if(!cur)return;
-  const {f,cfg,gdd,clamped,stage,pct,turf,primes,byDay,days,noonByDay,rain48,updated}=cur;
+  const {f,cfg,gdd,clamped,stage,pct,turf,primes,byDay,days,noonByDay,rain48,today,nowHour,updated}=cur;
   const wEl=el('winN');let winN=parseFloat(wEl?wEl.value:3);if(isNaN(winN))winN=3;winN=Math.max(1,Math.min(6,winN));
   const apb=parseFloat((el('apb')&&el('apb').value)||ACC_PER_BATT_DEFAULT)||ACC_PER_BATT_DEFAULT;
 
@@ -278,6 +278,7 @@ function render(){
   let best=null;const EPS=0.04,accRank={firm:2,soft:1,mud:0};
   ranked.forEach(R=>{
     if(!(R.win&&R.win.kind==='go'))return;
+    if(R.d===today&&nowHour>=0&&R.win.h1<=nowHour)return;
     const seg=R.hrs.slice(R.win.i0,R.win.i1+1);
     const avg=seg.reduce((s,h)=>s+h.sc.score,0)/seg.length;
     const len=R.win.h1-R.win.h0;const accR=accRank[R.access.s];
