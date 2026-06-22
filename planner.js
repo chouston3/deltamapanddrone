@@ -275,8 +275,17 @@ function render(){
     return {d,noonDec,hrs,goCount,cautCount,win,peak,access:accessFor(rain48[d]||0)};
   }).filter(Boolean);
 
-  let best=null;
-  ranked.forEach(R=>{if(R.win&&R.win.kind==='go'){const seg=R.hrs.slice(R.win.i0,R.win.i1+1);const avg=seg.reduce((s,h)=>s+h.sc.score,0)/seg.length;const len=R.win.h1-R.win.h0;if(!best||avg>best.avg+1e-9||(Math.abs(avg-best.avg)<1e-9&&len>best.len))best={R,avg,len}}});
+  let best=null;const EPS=0.04,accRank={firm:2,soft:1,mud:0};
+  ranked.forEach(R=>{
+    if(!(R.win&&R.win.kind==='go'))return;
+    const seg=R.hrs.slice(R.win.i0,R.win.i1+1);
+    const avg=seg.reduce((s,h)=>s+h.sc.score,0)/seg.length;
+    const len=R.win.h1-R.win.h0;const accR=accRank[R.access.s];
+    if(!best){best={R,avg,len,accR};return}
+    const better = avg>best.avg+EPS
+      || (Math.abs(avg-best.avg)<=EPS && (len>best.len || (len===best.len && accR>best.accR)));
+    if(better)best={R,avg,len,accR};
+  });
   const noonNow=days.length?noonByDay[days[0]]:null,noonEnd=days.length?noonByDay[days[days.length-1]]:null;
 
   let html='';
@@ -338,7 +347,7 @@ function render(){
     let pill,plabel;
     if(R.goCount>=2){pill='p-go';plabel='Go'}else if(R.goCount+R.cautCount>=2){pill='p-caution';plabel='Caution'}else{pill='p-nogo';plabel='No-go'}
     let winTxt=R.win?'<b>'+hr12(R.win.h0)+'–'+hr12(R.win.h1)+'</b> '+(R.win.kind==='go'?'clear to fly':'caution'):'<b>No usable window</b> in the noon band';
-    const p=R.peak||R.hrs[0];
+    const p=(R.win?R.hrs.slice(R.win.i0,R.win.i1+1):R.hrs).reduce((a,b)=>b.solar>a.solar?b:a,(R.win?R.hrs[R.win.i0]:R.hrs[0]));
     const mid=R.win?R.hrs.find(x=>x.hour===Math.floor((R.win.h0+R.win.h1)/2)):p;
     const azTxt=mid?'sun '+compass(mid.az)+' '+Math.round(mid.az)+'°':'';
     const peakTxt='solar noon '+fmtClock(R.noonDec)+' · peak '+Math.round(p.solar)+'° · '+p.wind.toFixed(1)+' m/s ('+Math.round(p.wind*2.237)+' mph) · '+Math.round(p.cloud)+'% cloud';
