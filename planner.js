@@ -157,7 +157,11 @@ function scoreHour(h,noonDec,winN){
   else if(h.solar>=20){sunS=0.4;r.push('Low sun '+Math.round(h.solar)+'°')}else{sunS=0.3;r.push('Very low sun')}
   let tempS=1;
   if(h.temp>104||h.temp<14){tempS=0;hard=true;r.push('Outside −10–40 °C spec')}else if(h.temp>100){tempS=0.6;r.push('Heat near limit')}
-  const score=windS*0.26+cloudS*0.20+precipS*0.20+canopyS*0.17+sunS*0.12+tempS*0.05;
+  let visS=1;
+  if(h.vis!=null){const mi=h.vis/1609.34;
+    if(mi<3){visS=0;hard=true;r.push('Visibility '+mi.toFixed(1)+' mi — below Part 107 minimum (3 SM)')}
+    else if(mi<5){visS=0.6;r.push('Visibility '+mi.toFixed(1)+' mi — hazy')}}
+  const score=windS*0.25+cloudS*0.19+precipS*0.19+canopyS*0.16+sunS*0.11+tempS*0.05+visS*0.05;
   let verdict;if(hard||score<0.45)verdict='nogo';else if(score<0.72)verdict='caution';else verdict='go';
   if(!hard&&h.canopy&&h.canopy.s==='drying'&&verdict==='go')verdict='caution';
   return {verdict,score,reasons:r,hard};
@@ -203,7 +207,7 @@ async function select(id){
   const f=fields.find(x=>x.id===id);if(!f)return;
   el('main').innerHTML='<div class="loading">Pulling forecast and accumulating degree days for <b>'+esc(f.name)+'</b>…</div>';
   const url='https://api.open-meteo.com/v1/forecast?latitude='+f.lat+'&longitude='+f.lon+
-    '&hourly=temperature_2m,relative_humidity_2m,dew_point_2m,precipitation,precipitation_probability,cloud_cover,wind_speed_10m,wind_gusts_10m,wind_direction_10m,shortwave_radiation'+
+    '&hourly=temperature_2m,relative_humidity_2m,dew_point_2m,precipitation,precipitation_probability,cloud_cover,wind_speed_10m,wind_gusts_10m,wind_direction_10m,wind_speed_120m,wind_direction_120m,shortwave_radiation,visibility'+
     '&daily=temperature_2m_max,temperature_2m_min&current=temperature_2m'+
     '&temperature_unit=fahrenheit&wind_speed_unit=ms&precipitation_unit=inch&timezone=auto&past_days=92&forecast_days=7';
   let data;
@@ -244,9 +248,13 @@ async function select(id){
     const hour=parseInt(ht[i].slice(11,13),10);
     const utc=new Date(Date.parse(ht[i].replace(' ','T')+':00Z')-off*1000);
     const sp=solarPos(utc,f.lat,f.lon);
+    const w10=P.wind_speed_10m[i]||0,g10=P.wind_gusts_10m[i]||0;
+    const w120=(P.wind_speed_120m&&P.wind_speed_120m[i]!=null)?P.wind_speed_120m[i]:w10;
+    const shear=w10>0.5?Math.max(1,w120/w10):1;
     const rec={date:d,hour,temp:P.temperature_2m[i],rh:P.relative_humidity_2m[i],dew:P.dew_point_2m[i],
       precip:P.precipitation[i]||0,pprob:P.precipitation_probability[i]||0,cloud:P.cloud_cover[i]||0,
-      wind:P.wind_speed_10m[i]||0,gust:P.wind_gusts_10m[i]||0,wdir:P.wind_direction_10m[i]||0,rad:P.shortwave_radiation[i]||0,
+      wind:w120,gust:g10*shear,windGround:w10,gustGround:g10,
+      wdir:(P.wind_direction_120m&&P.wind_direction_120m[i]!=null)?P.wind_direction_120m[i]:(P.wind_direction_10m[i]||0),rad:P.shortwave_radiation[i]||0,vis:(P.visibility&&P.visibility[i]!=null)?P.visibility[i]:null,
       solar:sp.elev,az:sp.az};
     rec.canopy=canopyState(rec,hsrArr[i]);
     (byDay[d]=byDay[d]||[]).push(rec);
@@ -356,7 +364,7 @@ function render(){
     const canWin=mid?mid.canopy:(R.hrs[0]&&R.hrs[0].canopy);
     const canCls=canWin?('can-'+canWin.s):'can-dry',canLab=canWin?canWin.label.split(' — ')[0]:'—';
     let rows='';
-    R.hrs.filter(x=>x.hour%2===0).forEach(x=>{rows+='<tr><td><span class="hv" style="background:'+COL[x.sc.verdict]+'"></span>'+hr12(x.hour)+'</td><td class="mono">'+x.wind.toFixed(1)+'/'+x.gust.toFixed(1)+'</td><td class="mono">'+Math.round(x.cloud)+'%</td><td class="mono">'+Math.round(x.pprob)+'%</td><td class="mono">'+(x.temp-x.dew>=0?'+':'')+Math.round(x.temp-x.dew)+'°</td><td class="mono">'+Math.round(x.solar)+'°</td><td class="mono">'+compass(x.az)+'</td><td style="text-align:right"><span class="hv" style="background:'+(x.canopy.s==='dry'?'#57a86a':x.canopy.s==='drying'?'#d9a32f':'#c75a4e')+'"></span></td></tr>'});
+    R.hrs.filter(x=>x.hour%2===0).forEach(x=>{rows+='<tr><td><span class="hv" style="background:'+COL[x.sc.verdict]+'"></span>'+hr12(x.hour)+'</td><td class="mono">'+x.wind.toFixed(1)+'/'+x.gust.toFixed(1)+'</td><td class="mono">'+Math.round(x.cloud)+'%</td><td class="mono">'+Math.round(x.pprob)+'%</td><td class="mono">'+(x.vis!=null?(x.vis/1609.34).toFixed(0):'-')+'</td><td class="mono">'+(x.temp-x.dew>=0?'+':'')+Math.round(x.temp-x.dew)+'°</td><td class="mono">'+Math.round(x.solar)+'°</td><td class="mono">'+compass(x.az)+'</td><td style="text-align:right"><span class="hv" style="background:'+(x.canopy.s==='dry'?'#57a86a':x.canopy.s==='drying'?'#d9a32f':'#c75a4e')+'"></span></td></tr>'});
 
     briefs[R.d]='DELTA FLIGHT BRIEF — '+f.name+' ('+(+f.lat).toFixed(4)+', '+(+f.lon).toFixed(4)+')\n'+
       dObj.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'})+(stage?' · '+cfg.label+' '+stage.s:(turf&&turf.gp!=null?' · '+turf.label+' · growth '+Math.round(turf.gp*100)+'%':''))+'\n'+
@@ -374,7 +382,7 @@ function render(){
       ribbonSVG(R.hrs,R.noonDec,winN)+
       '<details><summary>Hourly detail &amp; copy briefing</summary>'+
         '<button class="ghost" data-brief="'+R.d+'" style="margin:4px 0 2px">Copy briefing</button>'+
-        '<table class="hourtbl"><thead><tr><th>Hour</th><th>Wind/gust</th><th>Cloud</th><th>Rain</th><th>T−Dew</th><th>Sun</th><th>Az</th><th>Canopy</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+        '<table class="hourtbl"><thead><tr><th>Hour</th><th>Wind/gust 390ft</th><th>Cloud</th><th>Rain</th><th>Vis mi</th><th>T−Dew</th><th>Sun</th><th>Az</th><th>Canopy</th></tr></thead><tbody>'+rows+'</tbody></table>'+
       '</details>'+
     '</div>';
   });

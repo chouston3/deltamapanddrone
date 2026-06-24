@@ -107,7 +107,7 @@
 <body>
 <div class="wrap">
   <header>
-    <div class="brand">Delta<span class="dot">/</span>Mission Planner <span style="font-size:12px;color:var(--faint);font-family:'IBM Plex Mono',monospace;letter-spacing:0">build 3.4</span></div>
+    <div class="brand">Delta<span class="dot">/</span>Mission Planner <span style="font-size:12px;color:var(--faint);font-family:'IBM Plex Mono',monospace;letter-spacing:0">build 3.6</span></div>
     <div class="tagline">Multispectral mission timing for Delta row crops and turf — live weather scored for sensor-grade conditions, canopy dryness, field access, crop stage, and mission load. Built for the Mavic 3M.</div>
   </header>
 
@@ -159,7 +159,8 @@
 
   <div class="method wrap" style="padding-left:0;padding-right:0">
     <b>How the score works.</b> Each daylight hour inside your solar-noon window is graded on six axes weighted for multispectral capture.
-    <b>Wind</b> (26%): under 6 m/s ideal; 8–10 caution; over 12 m/s or gusts over 12 = no-go.
+    <b>Wind</b> (25%): wind is read at 120 m (≈390 ft, your flight altitude), not the ground, since the air is faster aloft. Under 6 m/s ideal; 8–10 caution; over 12 m/s or gusts over 12 = no-go. Ground-only forecasts under-read the wind your drone fights. Gusts at altitude are estimated from the ground gust scaled by the wind shear, so treat them as modeled, not measured.
+    <b>Visibility</b>: under 3 statute miles is a hard no-go (Part 107 minimum); 3–5 mi flags as hazy.
     <b>Cloud</b> (20%): clear or uniform overcast score well; partly cloudy (≈30–70%) is penalized because drifting light wrecks radiometric consistency.
     <b>Precip</b> (20%): rain or ≥60% chance = no-go.
     <b>Canopy</b> (17%): modeled from hours since last rain plus temp/dewpoint spread, wind, and solar radiation — a wet canopy is a hard no-go because surface water suppresses NIR and skews NDVI/NDRE; "drying" caps the hour at caution.
