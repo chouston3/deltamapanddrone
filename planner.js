@@ -330,6 +330,7 @@ function render(){
     '<div class="cardrow">'+
       '<button class="ghost" id="aSect">Sectional (SkyVector)</button>'+
       '<button class="ghost" id="aAloft">LAANC (Aloft Air Control)</button>'+
+      '<button class="ghost" id="aTfr">FAA TFRs</button>'+
       '<label style="display:flex;align-items:center;gap:6px;margin:0;text-transform:none;letter-spacing:0;font-size:12.5px;color:var(--muted)">acres/battery <input id="apb" class="mono" type="number" min="20" max="600" step="10" value="'+apb+'" style="width:66px;padding:5px 8px"></label>'+
     '</div>'+
   '</div>';
@@ -392,6 +393,7 @@ function render(){
   const mf=el('markFlown');if(mf)mf.addEventListener('click',()=>{f.lastFlown=new Date().toISOString().slice(0,10);save();render();toast('Marked flown today')});
   const se=el('aSect');if(se)se.addEventListener('click',()=>window.open('https://skyvector.com/?ll='+f.lat+','+f.lon+'&chart=301&zoom=5','_blank'));
   const al=el('aAloft');if(al)al.addEventListener('click',()=>window.open('https://air.aloft.ai/','_blank'));
+  const tf=el('aTfr');if(tf)tf.addEventListener('click',()=>window.open('https://tfr.faa.gov/','_blank'));
   el('main').querySelectorAll('[data-brief]').forEach(b=>b.addEventListener('click',()=>{
     const t=briefs[b.dataset.brief]||'';
     if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(()=>toast('Briefing copied'),()=>fallbackCopy(t));else fallbackCopy(t);
