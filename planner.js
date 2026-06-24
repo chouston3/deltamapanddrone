@@ -250,10 +250,10 @@ async function select(id){
     const sp=solarPos(utc,f.lat,f.lon);
     const w10=P.wind_speed_10m[i]||0,g10=P.wind_gusts_10m[i]||0;
     const w120=(P.wind_speed_120m&&P.wind_speed_120m[i]!=null)?P.wind_speed_120m[i]:w10;
-    const shear=w10>0.5?Math.max(1,w120/w10):1;
+    const shear=Math.min(1.8,Math.max(1,w120/Math.max(w10,2)));
     const rec={date:d,hour,temp:P.temperature_2m[i],rh:P.relative_humidity_2m[i],dew:P.dew_point_2m[i],
       precip:P.precipitation[i]||0,pprob:P.precipitation_probability[i]||0,cloud:P.cloud_cover[i]||0,
-      wind:w120,gust:g10*shear,windGround:w10,gustGround:g10,
+      wind:w120,gust:Math.max(w120,g10*shear),windGround:w10,gustGround:g10,
       wdir:(P.wind_direction_120m&&P.wind_direction_120m[i]!=null)?P.wind_direction_120m[i]:(P.wind_direction_10m[i]||0),rad:P.shortwave_radiation[i]||0,vis:(P.visibility&&P.visibility[i]!=null)?P.visibility[i]:null,
       solar:sp.elev,az:sp.az};
     rec.canopy=canopyState(rec,hsrArr[i]);
