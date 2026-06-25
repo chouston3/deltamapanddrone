@@ -79,6 +79,38 @@ el('geoBtn').addEventListener('click',()=>{
     ()=>{el('geoBtn').textContent='Use my current location';alert('Could not get location (needs https or localhost).')});
 });
 
+function parseCoords(s){
+  if(!s)return null;s=s.trim();if(!s)return null;
+  if(s.indexOf('°')>=0){
+    const re=/(\d+(?:\.\d+)?)°\s*(\d+(?:\.\d+)?)?\s*['′]?\s*(\d+(?:\.\d+)?)?\s*["″]?\s*([NSEW])/gi;
+    const out=[];let m;
+    while((m=re.exec(s))!==null){
+      let v=parseFloat(m[1])+(parseFloat(m[2]||0))/60+(parseFloat(m[3]||0))/3600;
+      const h=m[4].toUpperCase();if(h==='S'||h==='W')v=-v;
+      out.push({v,h});
+    }
+    if(out.length>=2){
+      let lat=null,lon=null;
+      for(const o of out){if(o.h==='N'||o.h==='S')lat=o.v;else lon=o.v;}
+      if(lat==null||lon==null){lat=out[0].v;lon=out[1].v;}
+      return {lat,lon};
+    }
+    return null;
+  }
+  const m=s.match(/(-?\d+(?:\.\d+)?)\s*[,\s]\s*(-?\d+(?:\.\d+)?)/);
+  if(m)return {lat:parseFloat(m[1]),lon:parseFloat(m[2])};
+  return null;
+}
+el('fPaste').addEventListener('input',()=>{
+  const raw=el('fPaste').value,msg=el('pasteMsg');
+  if(!raw.trim()){msg.textContent='';return}
+  const c=parseCoords(raw);
+  if(!c||isNaN(c.lat)||isNaN(c.lon)){msg.style.color='var(--caution)';msg.textContent='Could not read that — paste the full coordinates from Google.';return}
+  if(c.lat<-90||c.lat>90||c.lon<-180||c.lon>180){msg.style.color='var(--caution)';msg.textContent='Numbers out of range — check the paste.';return}
+  el('fLat').value=c.lat.toFixed(5);el('fLon').value=c.lon.toFixed(5);
+  msg.style.color='var(--go)';msg.textContent='Parsed: '+c.lat.toFixed(5)+', '+c.lon.toFixed(5);
+});
+
 function solarPos(date,lat,lon){
   const rad=Math.PI/180;
   const jd=date.getTime()/86400000+2440587.5,T=(jd-2451545.0)/36525.0;
