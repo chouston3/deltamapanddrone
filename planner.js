@@ -1,3 +1,4 @@
+console.log("planner.js build 3.9");
 const CROPS={
   corn:{label:'Corn',base:50,cap:86,total:2700,unit:'GDD',stages:[{g:0,s:'Pre-emergence',v:'low'},{g:120,s:'VE · emergence',v:'high'},{g:350,s:'V3–V5',v:'med'},{g:475,s:'V6',v:'high'},{g:740,s:'V10',v:'high'},{g:1000,s:'V14',v:'high'},{g:1135,s:'VT · tasseling',v:'high'},{g:1400,s:'R1 · silking',v:'high'},{g:1925,s:'R3 · milk',v:'med'},{g:2450,s:'R5 · dent',v:'low'},{g:2700,s:'R6 · maturity',v:'low'}]},
   soybean:{label:'Soybean',base:50,cap:86,total:2500,unit:'GDD',stages:[{g:0,s:'Pre-emergence',v:'low'},{g:130,s:'VE · emergence',v:'high'},{g:400,s:'V-stages',v:'med'},{g:700,s:'R1 · bloom',v:'high'},{g:1100,s:'R3 · pod set',v:'high'},{g:1500,s:'R5 · seed fill',v:'high'},{g:1900,s:'R6 · full seed',v:'med'},{g:2500,s:'R8 · maturity',v:'low'}]},
