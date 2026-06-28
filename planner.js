@@ -1,4 +1,4 @@
-console.log("planner.js build 3.9");
+console.log("planner.js build 3.10");
 const CROPS={
   corn:{label:'Corn',base:50,cap:86,total:2700,unit:'GDD',stages:[{g:0,s:'Pre-emergence',v:'low'},{g:120,s:'VE · emergence',v:'high'},{g:350,s:'V3–V5',v:'med'},{g:475,s:'V6',v:'high'},{g:740,s:'V10',v:'high'},{g:1000,s:'V14',v:'high'},{g:1135,s:'VT · tasseling',v:'high'},{g:1400,s:'R1 · silking',v:'high'},{g:1925,s:'R3 · milk',v:'med'},{g:2450,s:'R5 · dent',v:'low'},{g:2700,s:'R6 · maturity',v:'low'}]},
   soybean:{label:'Soybean',base:50,cap:86,total:2500,unit:'GDD',stages:[{g:0,s:'Pre-emergence',v:'low'},{g:130,s:'VE · emergence',v:'high'},{g:400,s:'V-stages',v:'med'},{g:700,s:'R1 · bloom',v:'high'},{g:1100,s:'R3 · pod set',v:'high'},{g:1500,s:'R5 · seed fill',v:'high'},{g:1900,s:'R6 · full seed',v:'med'},{g:2500,s:'R8 · maturity',v:'low'}]},
@@ -10,6 +10,7 @@ const TURF={turf_warm:{label:'Turf · warm-season',topt:31,varr:7},turf_cool:{la
 function typeOf(c){return CROPS[c]||TURF[c]||null}
 function growthPotential(meanF,t){const c=(meanF-32)*5/9;return Math.exp(-0.5*Math.pow((c-t.topt)/t.varr,2))}
 const ACC_PER_BATT_DEFAULT=150;
+const BUFFER_DEFAULT=200;
 const CHECKLIST=['Airspace + NOTAMs checked (LAANC if needed)','Mission boundary loaded in DJI Pilot 2','RTK base set / NTRIP connected','Sunlight sensor (DLS) clean + unobstructed','Airframe, props, battery, firmware inspected','RTH altitude + low-battery RTH set','Flight logged (time, conditions, notes)'];
 
 const LS='delta_mission_fields_v2';
@@ -163,6 +164,11 @@ function accessFor(rain48){
   return {s:'firm',label:'Firm',cls:'ac-firm'};
 }
 function gddDaily(tx,tn,base,cap){const a=Math.min(Math.max(tx,base),cap),b=Math.min(Math.max(tn,base),cap);return Math.max(0,(a+b)/2-base)}
+function bufferedAcres(acres,bufFt){
+  if(!acres||acres<=0)return acres;
+  const A=acres*4046.8564,d=bufFt*0.3048,s=Math.sqrt(A);
+  return Math.pow(s+2*d,2)/4046.8564;
+}
 function stageFor(crop,gdd){const st=CROPS[crop].stages;let c=st[0];for(const s of st){if(gdd>=s.g)c=s;else break}return c}
 
 function scoreHour(h,noonDec,winN){
@@ -306,6 +312,8 @@ function render(){
   const {f,cfg,gdd,clamped,stage,pct,turf,primes,byDay,days,noonByDay,rain48,today,nowHour,updated}=cur;
   const wEl=el('winN');let winN=parseFloat(wEl?wEl.value:3);if(isNaN(winN))winN=3;winN=Math.max(1,Math.min(6,winN));
   const apb=parseFloat((el('apb')&&el('apb').value)||ACC_PER_BATT_DEFAULT)||ACC_PER_BATT_DEFAULT;
+  let buf=el('buf')?parseFloat(el('buf').value):BUFFER_DEFAULT;if(isNaN(buf)||buf<0)buf=0;
+  const effAc=f.acres?bufferedAcres(f.acres,buf):null;
 
   const ranked=days.map(d=>{
     const noonDec=noonByDay[d];
@@ -341,7 +349,7 @@ function render(){
   const cropNote=clamped?' <span style="color:var(--faint)">(from ~92 days — may undercount)</span>':'';
   const lastTxt=f.lastFlown?(()=>{const days2=Math.round((Date.now()-Date.parse(f.lastFlown+'T12:00:00'))/86400000);return new Date(f.lastFlown+'T12:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric'})+' ('+days2+'d ago)'})():'never';
   const drift=(noonNow!=null&&noonEnd!=null)?'drifts to '+fmtClock(noonEnd):'';
-  const mission=f.acres?(()=>{const batts=Math.ceil(f.acres/apb),mins=Math.round(f.acres/apb*40);return batts+' batt'+(batts>1?'s':'')+' · ~'+mins+' min'})():'add acreage';
+  const mission=f.acres?(()=>{const a=effAc;const batts=Math.ceil(a/apb),mins=Math.round(a/apb*40);return batts+' batt'+(batts>1?'s':'')+' · ~'+mins+' min'})():'add acreage';
 
   let cropStat='',baseNote='';
   if(stage){
@@ -364,7 +372,7 @@ function render(){
     '<div class="stagebar">'+
       cropStat+
       '<div class="stat"><div class="k">Solar noon this week</div><div class="v mono">'+(noonNow!=null?fmtClock(noonNow):'—')+'</div><div class="sub">'+drift+'</div></div>'+
-      '<div class="stat"><div class="k">Mission load</div><div class="v mono" style="font-size:18px">'+mission+'</div><div class="sub">'+(f.acres?f.acres+' ac @ '+apb+' ac/batt':'set acreage to estimate')+'</div></div>'+
+      '<div class="stat"><div class="k">Mission load</div><div class="v mono" style="font-size:18px">'+mission+'</div><div class="sub">'+(f.acres?f.acres+' ac +'+Math.round(buf)+'ft buffer → ~'+Math.round(effAc)+' ac flown @ '+apb+'/batt':'set acreage to estimate')+'</div></div>'+
       '<div class="stat"><div class="k">Last flown</div><div class="v" style="font-size:16px">'+lastTxt+'</div><div class="sub"><button class="ghost" id="markFlown" style="padding:3px 8px;font-size:11px">Mark flown today</button></div></div>'+
     '</div>'+
     (noteHtml?'<div class="note">'+noteHtml+'</div>':'')+
@@ -373,6 +381,7 @@ function render(){
       '<button class="ghost" id="aAloft">LAANC (Aloft Air Control)</button>'+
       '<button class="ghost" id="aTfr">FAA TFRs</button>'+
       '<label style="display:flex;align-items:center;gap:6px;margin:0;text-transform:none;letter-spacing:0;font-size:12.5px;color:var(--muted)">acres/battery <input id="apb" class="mono" type="number" min="20" max="600" step="10" value="'+apb+'" style="width:66px;padding:5px 8px"></label>'+
+      '<label style="display:flex;align-items:center;gap:6px;margin:0;text-transform:none;letter-spacing:0;font-size:12.5px;color:var(--muted)" title="Margin you fly past the boundary — set to your flight altitude (AGL)">buffer ft <input id="buf" class="mono" type="number" min="0" max="600" step="25" value="'+buf+'" style="width:60px;padding:5px 8px"></label>'+
     '</div>'+
   '</div>';
 
@@ -430,6 +439,7 @@ function render(){
 
   const wn=el('winN');if(wn)wn.addEventListener('change',render);
   const ap=el('apb');if(ap)ap.addEventListener('change',render);
+  const bf=el('buf');if(bf)bf.addEventListener('change',render);
   const rf=el('refresh');if(rf)rf.addEventListener('click',()=>select(f.id));
   const mf=el('markFlown');if(mf)mf.addEventListener('click',()=>{f.lastFlown=new Date().toISOString().slice(0,10);save();render();toast('Marked flown today')});
   const se=el('aSect');if(se)se.addEventListener('click',()=>window.open('https://skyvector.com/?ll='+f.lat+','+f.lon+'&chart=301&zoom=5','_blank'));
