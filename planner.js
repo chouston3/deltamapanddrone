@@ -1,4 +1,4 @@
-console.log("planner.js build 3.10");
+console.log("planner.js build 3.12");
 const CROPS={
   corn:{label:'Corn',base:50,cap:86,total:2700,unit:'GDD',stages:[{g:0,s:'Pre-emergence',v:'low'},{g:120,s:'VE · emergence',v:'high'},{g:350,s:'V3–V5',v:'med'},{g:475,s:'V6',v:'high'},{g:740,s:'V10',v:'high'},{g:1000,s:'V14',v:'high'},{g:1135,s:'VT · tasseling',v:'high'},{g:1400,s:'R1 · silking',v:'high'},{g:1925,s:'R3 · milk',v:'med'},{g:2450,s:'R5 · dent',v:'low'},{g:2700,s:'R6 · maturity',v:'low'}]},
   soybean:{label:'Soybean',base:50,cap:86,total:2500,unit:'GDD',stages:[{g:0,s:'Pre-emergence',v:'low'},{g:130,s:'VE · emergence',v:'high'},{g:400,s:'V-stages',v:'med'},{g:700,s:'R1 · bloom',v:'high'},{g:1100,s:'R3 · pod set',v:'high'},{g:1500,s:'R5 · seed fill',v:'high'},{g:1900,s:'R6 · full seed',v:'med'},{g:2500,s:'R8 · maturity',v:'low'}]},
@@ -9,8 +9,8 @@ const VNOTE={high:'Strong scouting value — variability, nutrient and stress si
 const TURF={turf_warm:{label:'Turf · warm-season',topt:31,varr:7},turf_cool:{label:'Turf · cool-season',topt:20,varr:5.5}};
 function typeOf(c){return CROPS[c]||TURF[c]||null}
 function growthPotential(meanF,t){const c=(meanF-32)*5/9;return Math.exp(-0.5*Math.pow((c-t.topt)/t.varr,2))}
-const ACC_PER_BATT_DEFAULT=150;
-const BUFFER_DEFAULT=200;
+const ACC_PER_BATT_DEFAULT=125;
+const BUFFER_DEFAULT=325;
 const CHECKLIST=['Airspace + NOTAMs checked (LAANC if needed)','Mission boundary loaded in DJI Pilot 2','RTK base set / NTRIP connected','Sunlight sensor (DLS) clean + unobstructed','Airframe, props, battery, firmware inspected','RTH altitude + low-battery RTH set','Flight logged (time, conditions, notes)'];
 
 const LS='delta_mission_fields_v2';
@@ -349,7 +349,7 @@ function render(){
   const cropNote=clamped?' <span style="color:var(--faint)">(from ~92 days — may undercount)</span>':'';
   const lastTxt=f.lastFlown?(()=>{const days2=Math.round((Date.now()-Date.parse(f.lastFlown+'T12:00:00'))/86400000);return new Date(f.lastFlown+'T12:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric'})+' ('+days2+'d ago)'})():'never';
   const drift=(noonNow!=null&&noonEnd!=null)?'drifts to '+fmtClock(noonEnd):'';
-  const mission=f.acres?(()=>{const a=effAc;const batts=Math.ceil(a/apb),mins=Math.round(a/apb*40);return batts+' batt'+(batts>1?'s':'')+' · ~'+mins+' min'})():'add acreage';
+  const mission=f.acres?(()=>{const a=effAc;const batts=Math.ceil(a/apb),mins=Math.round(a/apb*30);return batts+' batt'+(batts>1?'s':'')+' · ~'+mins+' min'})():'add acreage';
 
   let cropStat='',baseNote='';
   if(stage){
