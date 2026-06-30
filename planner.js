@@ -17,12 +17,42 @@ const LS='delta_mission_fields_v2';
 let fields=[];let activeId=null;let editId=null;let cur=null;let briefs={};
 try{fields=JSON.parse(localStorage.getItem(LS))||[]}catch(e){fields=[]}
 function save(){try{localStorage.setItem(LS,JSON.stringify(fields))}catch(e){}}
+const LSS='delta_mission_settings_v1';
+let settings={apb:ACC_PER_BATT_DEFAULT,buf:BUFFER_DEFAULT,winN:3};
+try{const s=JSON.parse(localStorage.getItem(LSS));if(s&&typeof s==='object')settings=Object.assign(settings,s)}catch(e){}
+function saveSettings(){try{localStorage.setItem(LSS,JSON.stringify(settings))}catch(e){}}
 function el(id){return document.getElementById(id)}
+
+/* ---- Leaflet field map (graceful no-op if Leaflet/host absent) ---- */
+const SAT_TILES='https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+const STREET_TILES='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+function pinIcon(){return L.divIcon({className:'',html:'<div style="width:16px;height:16px;border-radius:50% 50% 50% 0;background:#e0a94a;border:2px solid #1a1305;transform:rotate(-45deg);box-shadow:0 0 0 2px rgba(0,0,0,.35)"></div>',iconSize:[16,16],iconAnchor:[8,16]})}
+let fmap=null,fmarker=null;
+function ensureFormMap(){
+  if(fmap||!window.L)return;const host=el('formMap');if(!host)return;
+  try{
+    fmap=L.map(host,{zoomControl:true,attributionControl:false}).setView([34.78,-90.62],8);
+    const sat=L.tileLayer(SAT_TILES,{maxZoom:19}),street=L.tileLayer(STREET_TILES,{maxZoom:19});
+    sat.addTo(fmap);L.control.layers({'Satellite':sat,'Street':street},null,{position:'topright',collapsed:true}).addTo(fmap);
+    fmap.on('click',e=>placeFormMarker(e.latlng.lat,e.latlng.lng,true));
+    setTimeout(()=>{try{fmap.invalidateSize()}catch(e){}},200);
+  }catch(e){host.style.display='none'}
+}
+function placeFormMarker(lat,lon,fromMap){
+  ensureFormMap();if(!fmap)return;
+  if(!fmarker){fmarker=L.marker([lat,lon],{draggable:true,icon:pinIcon()}).addTo(fmap);fmarker.on('dragend',()=>{const p=fmarker.getLatLng();syncMarkerInputs(p.lat,p.lng)});}
+  else fmarker.setLatLng([lat,lon]);
+  if(fmap.getZoom()<13)fmap.setView([lat,lon],15);else fmap.panTo([lat,lon]);
+  if(fromMap)syncMarkerInputs(lat,lon);
+}
+function clearFormMarker(){if(fmap&&fmarker){fmap.removeLayer(fmarker);fmarker=null;fmap.setView([34.78,-90.62],8)}}
+function syncMarkerInputs(lat,lon){el('fLat').value=(+lat).toFixed(5);el('fLon').value=(+lon).toFixed(5);const m=el('pasteMsg');if(m){m.style.color='var(--go)';m.textContent='Pinned: '+(+lat).toFixed(5)+', '+(+lon).toFixed(5)}}
 function esc(s){return (s+'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]))}
 function toast(t){const e=el('toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),1900)}
 
 function renderFields(){
   const c=el('fieldList');c.innerHTML='';
+  const _bb=el('boardBtn');if(_bb)_bb.style.display=fields.length?'block':'none';
   if(!fields.length){c.innerHTML='<div style="color:var(--faint);font-size:13px;padding:4px 2px 12px">No fields yet.</div>';return}
   fields.forEach(f=>{
     const d=document.createElement('div');
@@ -43,14 +73,16 @@ function startEdit(id){
   const f=fields.find(x=>x.id===id);if(!f)return;editId=id;
   el('fName').value=f.name;el('fLat').value=f.lat;el('fLon').value=f.lon;el('fCrop').value=f.crop;el('fPlant').value=f.plant;
   el('fAcres').value=f.acres||'';el('fNotes').value=f.notes||'';
+  placeFormMarker(+f.lat,+f.lon,false);
   el('formTitle').textContent='Edit field';el('addBtn').textContent='Save changes';el('cancelEdit').style.display='block';
   el('addForm').scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 function resetForm(){
-  editId=null;['fName','fLat','fLon','fAcres','fNotes','geoQ'].forEach(i=>el(i).value='');el('geoRes').innerHTML='';
+  editId=null;['fName','fLat','fLon','fAcres','fNotes','geoQ'].forEach(i=>el(i).value='');el('geoRes').innerHTML='';el('pasteMsg').textContent='';clearFormMarker();
   el('formTitle').textContent='Fields';el('addBtn').textContent='Add field';el('cancelEdit').style.display='none';
 }
 el('cancelEdit').addEventListener('click',resetForm);
+['fLat','fLon'].forEach(id=>el(id).addEventListener('input',()=>{const la=parseFloat(el('fLat').value),lo=parseFloat(el('fLon').value);if(!isNaN(la)&&!isNaN(lo)&&la>=-90&&la<=90&&lo>=-180&&lo<=180)placeFormMarker(la,lo,false)}));
 
 el('addBtn').addEventListener('click',()=>{
   const name=el('fName').value.trim(),lat=parseFloat(el('fLat').value),lon=parseFloat(el('fLon').value),
@@ -70,14 +102,14 @@ async function doGeocode(){
     if(!res.length){el('geoRes').innerHTML='<div style="color:var(--faint);font-size:12px;padding:4px">No matches.</div>';return}
     const box=document.createElement('div');box.className='geo-res';
     res.forEach(p=>{const b=document.createElement('button');b.textContent=[p.name,p.admin1,p.country_code].filter(Boolean).join(', ');
-      b.addEventListener('click',()=>{el('fLat').value=(+p.latitude).toFixed(5);el('fLon').value=(+p.longitude).toFixed(5);if(!el('fName').value)el('fName').value=p.name;el('geoRes').innerHTML=''});box.appendChild(b)});
+      b.addEventListener('click',()=>{el('fLat').value=(+p.latitude).toFixed(5);el('fLon').value=(+p.longitude).toFixed(5);if(!el('fName').value)el('fName').value=p.name;el('geoRes').innerHTML='';placeFormMarker(+p.latitude,+p.longitude,false)});box.appendChild(b)});
     el('geoRes').innerHTML='';el('geoRes').appendChild(box);
   }catch(e){el('geoRes').innerHTML='<div style="color:var(--faint);font-size:12px;padding:4px">Search failed — paste coordinates instead.</div>'}
 }
 el('geoBtn').addEventListener('click',()=>{
   if(!navigator.geolocation){alert('Geolocation unavailable — paste coordinates instead.');return}
   el('geoBtn').textContent='Locating…';
-  navigator.geolocation.getCurrentPosition(p=>{el('fLat').value=p.coords.latitude.toFixed(5);el('fLon').value=p.coords.longitude.toFixed(5);el('geoBtn').textContent='Use my current location'},
+  navigator.geolocation.getCurrentPosition(p=>{el('fLat').value=p.coords.latitude.toFixed(5);el('fLon').value=p.coords.longitude.toFixed(5);el('geoBtn').textContent='Use my current location';placeFormMarker(p.coords.latitude,p.coords.longitude,false)},
     ()=>{el('geoBtn').textContent='Use my current location';alert('Could not get location (needs https or localhost).')});
 });
 
@@ -111,6 +143,7 @@ el('fPaste').addEventListener('input',()=>{
   if(c.lat<-90||c.lat>90||c.lon<-180||c.lon>180){msg.style.color='var(--caution)';msg.textContent='Numbers out of range — check the paste.';return}
   el('fLat').value=c.lat.toFixed(5);el('fLon').value=c.lon.toFixed(5);
   msg.style.color='var(--go)';msg.textContent='Parsed: '+c.lat.toFixed(5)+', '+c.lon.toFixed(5);
+  placeFormMarker(c.lat,c.lon,false);
 });
 
 function solarPos(date,lat,lon){
@@ -241,21 +274,33 @@ function ribbonSVG(hours,noonDec,winN){
   return '<svg class="ribbon" viewBox="0 0 '+W+' 118" preserveAspectRatio="none" role="img" aria-label="Hourly flight conditions, sun angle, and solar-noon window"><text x="'+padL+'" y="'+(top+6)+'" fill="#52606a" font-size="10" font-family="IBM Plex Mono,monospace">sun ↑</text>'+f40+line+bars+marks+ticks+'</svg>';
 }
 
-async function select(id){
-  activeId=id;renderFields();
-  const f=fields.find(x=>x.id===id);if(!f)return;
-  el('main').innerHTML='<div class="loading">Pulling forecast and accumulating degree days for <b>'+esc(f.name)+'</b>…</div>';
+const fcache={};const FC_TTL=10*60*1000;
+async function getForecast(f){
+  const key=(+f.lat).toFixed(4)+','+(+f.lon).toFixed(4);
+  const c=fcache[key];if(c&&Date.now()-c.t<FC_TTL)return c.data;
   const url='https://api.open-meteo.com/v1/forecast?latitude='+f.lat+'&longitude='+f.lon+
     '&hourly=temperature_2m,relative_humidity_2m,dew_point_2m,precipitation,precipitation_probability,cloud_cover,wind_speed_10m,wind_gusts_10m,wind_direction_10m,wind_speed_120m,wind_direction_120m,shortwave_radiation,visibility'+
     '&daily=temperature_2m_max,temperature_2m_min&current=temperature_2m'+
     '&temperature_unit=fahrenheit&wind_speed_unit=ms&precipitation_unit=inch&timezone=auto&past_days=92&forecast_days=7';
-  let data;
   const ctrl=new AbortController(),to=setTimeout(()=>ctrl.abort(),15000);
+  let data;
   try{const res=await fetch(url,{signal:ctrl.signal});clearTimeout(to);if(!res.ok)throw new Error('HTTP '+res.status);data=await res.json()}
-  catch(e){clearTimeout(to);const blocked=(e.name==='AbortError'||location.protocol==='file:');
+  catch(e){clearTimeout(to);throw e}
+  fcache[key]={data,t:Date.now()};return data;
+}
+async function select(id){
+  activeId=id;renderFields();
+  const f=fields.find(x=>x.id===id);if(!f)return;
+  el('main').innerHTML='<div class="loading">Pulling forecast and accumulating degree days for <b>'+esc(f.name)+'</b>…</div>';
+  let data;
+  try{data=await getForecast(f)}
+  catch(e){const blocked=(e.name==='AbortError'||location.protocol==='file:');
     el('main').innerHTML='<div class="err"><b>'+(e.name==='AbortError'?'The weather request timed out.':'Couldn\'t reach the weather service.')+'</b><br>'+
     (blocked?'This usually means the file is opened directly from disk (file://), where the browser blocks the data request. Serve it instead: open a terminal in this folder, run <span class="mono">python3 -m http.server 8000</span>, then visit <span class="mono">http://localhost:8000/'+location.pathname.split('/').pop()+'</span>.':esc(e.message)+'. Check your connection and retry.')+'</div>';return}
-
+  cur=buildModel(f,data);
+  render();
+}
+function buildModel(f,data){
   const off=data.utc_offset_seconds||0,tzMin=off/60;
   const today=(data.current&&data.current.time||'').slice(0,10)||(data.daily.time.find(d=>d>=new Date().toISOString().slice(0,10))||data.daily.time[0]);
 
@@ -303,26 +348,34 @@ async function select(id){
   const rain48={};
   days.forEach(d=>{const i0=idxOf[d+'T00:00'];let s=0;if(i0!=null)for(let k=Math.max(0,i0-48);k<i0;k++)s+=P.precipitation[k]||0;rain48[d]=s});
 
-  cur={f,cfg,gdd,clamped,stage,pct,turf,primes,byDay,days,noonByDay,rain48,today,nowHour:(data.current&&data.current.time)?(parseInt(data.current.time.slice(11,13),10)+(parseInt(data.current.time.slice(14,16),10)||0)/60):-1,updated:new Date()};
-  render();
+  return {f,cfg,gdd,clamped,stage,pct,turf,primes,byDay,days,noonByDay,rain48,today,nowHour:(data.current&&data.current.time)?(parseInt(data.current.time.slice(11,13),10)+(parseInt(data.current.time.slice(14,16),10)||0)/60):-1,updated:new Date()};
+}
+
+function rankDays(m,winN){
+  return m.days.map(d=>{
+    const noonDec=m.noonByDay[d];
+    const hrs=m.byDay[d].filter(x=>x.hour>=5&&x.hour<=20).map(x=>{x.sc=scoreHour(x,noonDec,winN);return x});
+    if(!hrs.length)return null;
+    const goCount=hrs.filter(x=>x.sc.verdict==='go').length,cautCount=hrs.filter(x=>x.sc.verdict==='caution').length;
+    const win=bestWindow(hrs),peak=hrs.reduce((a,b)=>b.sc.score>a.sc.score?b:a,hrs[0]);
+    return {d,noonDec,hrs,goCount,cautCount,win,peak,access:accessFor(m.rain48[d]||0)};
+  }).filter(Boolean);
+}
+function dayPill(R){
+  if(R.goCount>=2)return {cls:'p-go',label:'Go'};
+  if(R.goCount+R.cautCount>=2)return {cls:'p-caution',label:'Caution'};
+  return {cls:'p-nogo',label:'No-go'};
 }
 
 function render(){
   if(!cur)return;
   const {f,cfg,gdd,clamped,stage,pct,turf,primes,byDay,days,noonByDay,rain48,today,nowHour,updated}=cur;
-  const wEl=el('winN');let winN=parseFloat(wEl?wEl.value:3);if(isNaN(winN))winN=3;winN=Math.max(1,Math.min(6,winN));
-  const apb=parseFloat((el('apb')&&el('apb').value)||ACC_PER_BATT_DEFAULT)||ACC_PER_BATT_DEFAULT;
-  let buf=el('buf')?parseFloat(el('buf').value):BUFFER_DEFAULT;if(isNaN(buf)||buf<0)buf=0;
+  const winN=Math.max(1,Math.min(6,settings.winN||3));
+  const apb=settings.apb||ACC_PER_BATT_DEFAULT;
+  let buf=settings.buf;if(isNaN(buf)||buf<0)buf=0;
   const effAc=f.acres?bufferedAcres(f.acres,buf):null;
 
-  const ranked=days.map(d=>{
-    const noonDec=noonByDay[d];
-    const hrs=byDay[d].filter(x=>x.hour>=5&&x.hour<=20).map(x=>{x.sc=scoreHour(x,noonDec,winN);return x});
-    if(!hrs.length)return null;
-    const goCount=hrs.filter(x=>x.sc.verdict==='go').length,cautCount=hrs.filter(x=>x.sc.verdict==='caution').length;
-    const win=bestWindow(hrs),peak=hrs.reduce((a,b)=>b.sc.score>a.sc.score?b:a,hrs[0]);
-    return {d,noonDec,hrs,goCount,cautCount,win,peak,access:accessFor(rain48[d]||0)};
-  }).filter(Boolean);
+  const ranked=rankDays(cur,winN);
 
   let best=null;const EPS=0.04,accRank={firm:2,soft:1,mud:0};
   ranked.forEach(R=>{
@@ -369,6 +422,7 @@ function render(){
 
   html+='<div class="card" style="margin-bottom:18px">'+
     '<h2>'+esc(f.name)+' — field summary</h2>'+
+    '<div id="fieldMap" class="minimap sm"></div>'+
     '<div class="stagebar">'+
       cropStat+
       '<div class="stat"><div class="k">Solar noon this week</div><div class="v mono">'+(noonNow!=null?fmtClock(noonNow):'—')+'</div><div class="sub">'+drift+'</div></div>'+
@@ -437,9 +491,11 @@ function render(){
 
   el('main').innerHTML=html;
 
-  const wn=el('winN');if(wn)wn.addEventListener('change',render);
-  const ap=el('apb');if(ap)ap.addEventListener('change',render);
-  const bf=el('buf');if(bf)bf.addEventListener('change',render);
+  const wn=el('winN');if(wn)wn.addEventListener('change',()=>{const v=parseFloat(wn.value);if(!isNaN(v)){settings.winN=Math.max(1,Math.min(6,v));saveSettings()}render()});
+  const ap=el('apb');if(ap)ap.addEventListener('change',()=>{const v=parseFloat(ap.value);if(!isNaN(v)&&v>0){settings.apb=v;saveSettings()}render()});
+  const bf=el('buf');if(bf)bf.addEventListener('change',()=>{let v=parseFloat(bf.value);if(isNaN(v)||v<0)v=0;settings.buf=v;saveSettings();render()});
+  const fm=el('fieldMap');
+  if(fm&&window.L){try{const mm=L.map(fm,{zoomControl:false,attributionControl:false,scrollWheelZoom:false});const sat=L.tileLayer(SAT_TILES,{maxZoom:19}),street=L.tileLayer(STREET_TILES,{maxZoom:19});sat.addTo(mm);L.control.layers({'Satellite':sat,'Street':street},null,{position:'topright',collapsed:true}).addTo(mm);mm.setView([+f.lat,+f.lon],15);L.marker([+f.lat,+f.lon],{icon:pinIcon()}).addTo(mm);setTimeout(()=>{try{mm.invalidateSize()}catch(e){}},150)}catch(e){fm.style.display='none'}}
   const rf=el('refresh');if(rf)rf.addEventListener('click',()=>select(f.id));
   const mf=el('markFlown');if(mf)mf.addEventListener('click',()=>{f.lastFlown=new Date().toISOString().slice(0,10);save();render();toast('Marked flown today')});
   const se=el('aSect');if(se)se.addEventListener('click',()=>window.open('https://skyvector.com/?ll='+f.lat+','+f.lon+'&chart=301&zoom=5','_blank'));
@@ -453,5 +509,44 @@ function render(){
 }
 function fallbackCopy(t){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('Briefing copied')}catch(e){toast('Copy failed')}document.body.removeChild(ta)}
 
+async function computeBoard(){
+  if(!fields.length)return;
+  activeId=null;renderFields();
+  el('main').innerHTML='<div class="loading">Scoring all '+fields.length+' field'+(fields.length>1?'s':'')+'…</div>';
+  const winN=Math.max(1,Math.min(6,settings.winN||3));
+  const results=await Promise.all(fields.map(async f=>{
+    try{const data=await getForecast(f);const m=buildModel(f,data);return {f,m,ranked:rankDays(m,winN),ok:true}}
+    catch(e){return {f,ok:false,msg:(e&&e.message)||'unavailable'}}
+  }));
+  let rows='';
+  results.forEach(R=>{
+    const f=R.f,cropLab=f.crop&&typeOf(f.crop)?typeOf(f.crop).label:'';
+    const meta='<div class="mono" style="color:var(--faint);font-size:11px;margin-top:2px">'+(+f.lat).toFixed(3)+', '+(+f.lon).toFixed(3)+(cropLab?' · '+cropLab:'')+(f.acres?' · '+f.acres+' ac':'')+'</div>';
+    if(!R.ok){rows+='<tr class="brow" data-fid="'+f.id+'"><td><b>'+esc(f.name)+'</b>'+meta+'</td><td colspan="3" style="color:var(--faint)">weather unavailable — '+esc(R.msg)+'</td><td></td></tr>';return}
+    const ranked=R.ranked,m=R.m,ti=ranked.findIndex(x=>x.d===m.today),todayR=ti>=0?ranked[ti]:ranked[0],tomoR=ti>=0?ranked[ti+1]:ranked[1];
+    const cell=(Rd,isToday)=>{
+      if(!Rd)return '<span style="color:var(--faint)">—</span>';
+      const p=dayPill(Rd);let w;
+      if(Rd.win){const passed=isToday&&m.nowHour>=0&&Rd.win.h1<=m.nowHour;w='<div class="mono" style="font-size:11px;color:'+(passed?'var(--faint)':'var(--muted)')+';margin-top:3px">'+(passed?'window passed':hr12(Rd.win.h0)+'–'+hr12(Rd.win.h1))+'</div>'}
+      else w='<div class="mono" style="font-size:11px;color:var(--faint);margin-top:3px">no window</div>';
+      return '<span class="minipill '+p.cls+'">'+p.label+'</span>'+w;
+    };
+    let best='<span style="color:var(--faint)">—</span>';
+    for(let i=0;i<ranked.length;i++){const Rd=ranked[i];if(!(Rd.win&&Rd.win.kind==='go'))continue;if(Rd.d===m.today&&m.nowHour>=0&&Rd.win.h1<=m.nowHour)continue;const dO=new Date(Rd.d+'T12:00:00');best='<b>'+dO.toLocaleDateString(undefined,{weekday:'short'})+'</b> '+hr12(Rd.win.h0)+'–'+hr12(Rd.win.h1);break}
+    if(best.indexOf('—')>=0){const c=ranked.find(Rd=>Rd.win&&Rd.win.kind==='caution');if(c){const dO=new Date(c.d+'T12:00:00');best='<span style="color:var(--caution)">'+dO.toLocaleDateString(undefined,{weekday:'short'})+' · caution</span>'}}
+    let strip='';
+    ranked.slice(0,7).forEach(Rd=>{const p=dayPill(Rd),col=p.cls==='p-go'?'#57a86a':p.cls==='p-caution'?'#d9a32f':'#c75a4e',dO=new Date(Rd.d+'T12:00:00');strip+='<i style="background:'+col+'" title="'+dO.toLocaleDateString(undefined,{weekday:'short'})+' — '+p.label+'"></i>'});
+    rows+='<tr class="brow" data-fid="'+f.id+'"><td><b>'+esc(f.name)+'</b>'+meta+'</td><td>'+cell(todayR,true)+'</td><td>'+cell(tomoR,false)+'</td><td style="font-size:12.5px">'+best+'</td><td><div class="wkstrip">'+strip+'</div></td></tr>';
+  });
+  el('main').innerHTML=
+    '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px"><h2 style="margin:0">Morning board — all fields</h2><button class="ghost" id="boardRefresh">↻ Refresh all</button></div>'+
+    '<div class="card" style="padding:2px 6px;overflow-x:auto"><table class="board"><thead><tr><th>Field</th><th>Today</th><th>Tomorrow</th><th>Best this week</th><th>7-day</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+    '<div class="note">Tap a field for the full 7-day outlook, ribbon, and copy-ready briefing. Verdicts use your ±'+winN+'h noon window. <span style="color:var(--faint)">A day reads <b>Go</b> with ≥2 go-hours, <b>Caution</b> with ≥2 go/caution-hours.</span></div>';
+  const br=el('boardRefresh');if(br)br.addEventListener('click',()=>{Object.keys(fcache).forEach(k=>delete fcache[k]);computeBoard()});
+  el('main').querySelectorAll('.brow').forEach(tr=>tr.addEventListener('click',()=>select(tr.dataset.fid)));
+}
+
+const _boardBtn=el('boardBtn');if(_boardBtn)_boardBtn.addEventListener('click',computeBoard);
+ensureFormMap();
 renderFields();
 if(fields.length)select(fields[0].id);

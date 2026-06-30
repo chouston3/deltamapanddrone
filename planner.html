@@ -4,7 +4,26 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Delta — Mission Planner</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" integrity="sha512-h9FcoyWjHcOcmEVkxOfTLnmZFWIH0iZhZT1H2TbOq55xssQGEJHEaIm+PgoUaZbRvQTNTluNOEfb1ZRy6D3BOw==" crossorigin="anonymous" referrerpolicy="no-referrer">
 <style>
+  .minimap{width:100%;height:175px;border:1px solid var(--border);border-radius:8px;margin:8px 0 2px;background:#0d1012;overflow:hidden;z-index:0}
+  .minimap.sm{height:150px;margin:0 0 14px}
+  .leaflet-container{background:#0d1012;font-family:inherit}
+  .leaflet-control-layers{background:var(--panel2)!important;color:var(--text)!important;border:1px solid var(--border)!important;border-radius:6px!important;box-shadow:none!important}
+  .leaflet-control-layers-expanded{padding:6px 9px 6px 6px}
+  .leaflet-control-layers label{text-transform:none;letter-spacing:0;color:var(--text);font-size:13px;margin:1px 0}
+  .leaflet-bar a{background:var(--panel2);color:var(--text);border-bottom-color:var(--border)}
+  .leaflet-bar a:hover{background:#2c343a;color:var(--text)}
+  .board{width:100%;border-collapse:collapse;font-size:13px;min-width:560px}
+  .board th{text-align:left;color:var(--muted);font-weight:500;padding:9px 10px;border-bottom:1px solid var(--border);font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+  .board td{padding:10px;border-bottom:1px solid #232a2f;vertical-align:middle}
+  .board tr:last-child td{border-bottom:none}
+  .board tr.brow{cursor:pointer;transition:background .12s}
+  .board tr.brow:hover td{background:var(--panel2)}
+  .wkstrip{display:flex;gap:2px}
+  .wkstrip i{width:11px;height:11px;border-radius:2px;display:inline-block}
+  .minipill{display:inline-block;font-family:'Barlow Semi Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:.05em;text-transform:uppercase;padding:2px 9px;border-radius:5px;white-space:nowrap}
+  .maphint{font-size:11px;color:var(--faint);margin:2px 0 0}
   :root{
     --bg:#14181b;--panel:#1d2328;--panel2:#252c32;--border:#333c42;--border2:#3f4a51;
     --text:#e9ece8;--muted:#93a09a;--faint:#66726c;
@@ -116,6 +135,7 @@
       <div class="card">
         <h2 id="formTitle">Fields</h2>
         <div id="fieldList"></div>
+        <button class="ghost full" id="boardBtn" style="display:none;margin-bottom:6px">&#8862; Morning board — all fields</button>
         <div id="addForm">
           <label>Find a place (town / landmark)</label>
           <div style="display:flex;gap:6px"><input id="geoQ" placeholder="e.g. Marianna, Arkansas"><button class="ghost" id="geoSearch">Search</button></div>
@@ -129,6 +149,8 @@
             <div><label>Latitude</label><input id="fLat" class="mono" placeholder="34.9155"></div>
             <div><label>Longitude</label><input id="fLon" class="mono" placeholder="-90.5056"></div>
           </div>
+          <div id="formMap" class="minimap"></div>
+          <div class="maphint">Click the map to drop the pin, or drag it to fine-tune. Satellite/Street toggle is top-right.</div>
           <button class="ghost full" id="geoBtn">Use my current location</button>
           <div class="row2">
             <div><label>Crop <span style="color:var(--faint);text-transform:none;letter-spacing:0">(optional)</span></label>
@@ -174,6 +196,7 @@
 </div>
 <div class="toast" id="toast"></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" integrity="sha512-BwHfrr4c9kmRkLw6iXFdzcdWV/PGkVgiIyIWLLlTSXzWQzxuSg4DiQUCpauz/EWjgk5TYQqX/kvn9pG1NpYfqg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="planner.js"></script>
 </body>
 </html>
