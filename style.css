@@ -515,3 +515,28 @@ h2 {
   .why-points { grid-template-columns: 1fr; }
   .creds-grid { grid-template-columns: 1fr; }
 }
+
+/* --- FIELD IMAGERY --- */
+.map-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  align-items: start;
+}
+.map-figure { margin: 0; }
+.map-figure img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 6px;
+}
+.map-figure figcaption {
+  margin-top: 10px;
+  font-size: 0.88rem;
+  color: var(--gray-700);
+  line-height: 1.6;
+}
+.map-single { max-width: 720px; margin: 0 auto; }
+@media (max-width: 760px) {
+  .map-pair { grid-template-columns: 1fr; }
+}
