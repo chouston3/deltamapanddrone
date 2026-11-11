@@ -1,4 +1,4 @@
-// Delta Map and Drone — main.js
+// Sunflower Aerial — main.js
 
 // Smooth scroll for nav links
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -56,7 +56,7 @@ if (form) {
                                       }
                               } catch (err) {
                                       status.className = 'form-status error';
-                                      status.textContent = 'Something went wrong. Email us directly at chip@deltamapdrone.com';
+                                      status.textContent = 'Something went wrong. Email us directly at chip@sunfloweraerial.com';
                               } finally {
                                       btn.disabled = false;
                                       btn.textContent = 'Send →';
