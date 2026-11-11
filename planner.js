@@ -462,7 +462,7 @@ function render(){
     let rows='';
     R.hrs.filter(x=>x.hour%2===0).forEach(x=>{rows+='<tr><td><span class="hv" style="background:'+COL[x.sc.verdict]+'"></span>'+hr12(x.hour)+'</td><td class="mono">'+x.wind.toFixed(1)+'/'+x.gust.toFixed(1)+'</td><td class="mono">'+Math.round(x.cloud)+'%</td><td class="mono">'+Math.round(x.pprob)+'%</td><td class="mono">'+(x.vis!=null?(x.vis/1609.34).toFixed(0):'-')+'</td><td class="mono">'+(x.temp-x.dew>=0?'+':'')+Math.round(x.temp-x.dew)+'°</td><td class="mono">'+Math.round(x.solar)+'°</td><td class="mono">'+compass(x.az)+'</td><td style="text-align:right"><span class="hv" style="background:'+(x.canopy.s==='dry'?'#57a86a':x.canopy.s==='drying'?'#d9a32f':'#c75a4e')+'"></span></td></tr>'});
 
-    briefs[R.d]='DELTA FLIGHT BRIEF — '+f.name+' ('+(+f.lat).toFixed(4)+', '+(+f.lon).toFixed(4)+')\n'+
+    briefs[R.d]='SUNFLOWER FLIGHT BRIEF — '+f.name+' ('+(+f.lat).toFixed(4)+', '+(+f.lon).toFixed(4)+')\n'+
       dObj.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'})+(stage?' · '+cfg.label+' '+stage.s:(turf&&turf.gp!=null?' · '+turf.label+' · growth '+Math.round(turf.gp*100)+'%':''))+'\n'+
       'VERDICT: '+plabel.toUpperCase()+'\n'+
       'Window: '+(R.win?hr12(R.win.h0)+'–'+hr12(R.win.h1)+' ('+(R.win.kind==='go'?'clear to fly':'caution')+')':'none in noon band')+'\n'+
