@@ -1,6 +1,6 @@
 # deltamapanddrone
 
-Marketing site for Delta Map and Drone LLC. Static HTML/CSS/JS, hosted on Cloudflare Pages, auto-deploys from `main`.
+Marketing site for Sunflower Aerial LLC (formerly Delta Map and Drone LLC). Static HTML/CSS/JS, hosted on Cloudflare Pages, auto-deploys from `main`.
 
 ## Hosting notes
 
