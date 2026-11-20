@@ -1,4 +1,4 @@
-// Sunflower Aerial — main.js
+// Sunflower Aerial: main.js
 
 // Smooth scroll for nav links
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -49,14 +49,14 @@ if (form) {
                                       const result = await res.json();
                                       if (result.success) {
                                                 status.className = 'form-status success';
-                                                status.textContent = 'Message sent. We will be in touch.';
+                                                status.textContent = 'Message sent. I\'ll call you back.';
                                                 form.reset();
                                       } else {
                                                 throw new Error(result.message || 'Server error');
                                       }
                               } catch (err) {
                                       status.className = 'form-status error';
-                                      status.textContent = 'Something went wrong. Email us directly at chip@sunfloweraerial.com';
+                                      status.textContent = 'That didn\'t go through. Call me at (901) 565-5123 or email chip@sunfloweraerial.com.';
                               } finally {
                                       btn.disabled = false;
                                       btn.textContent = 'Send →';
