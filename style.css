@@ -19,8 +19,8 @@
   --gray-500:     #8a8278;
   --gray-700:     #4a4640;
   --gray-900:     #1e1c18;
-  --font-sans:    'Inter', system-ui, sans-serif;
-  --font-serif:   'Merriweather', Georgia, serif;
+  --font-sans:    system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-serif:   Georgia, 'Times New Roman', serif;
   --max-w:        1100px;
   --radius:       6px;
 }
