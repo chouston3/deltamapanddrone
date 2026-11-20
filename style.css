@@ -25,11 +25,11 @@
   --radius:       6px;
 }
 
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; font-size: 17px; }
 
 body {
   font-family: var(--font-sans);
-  font-size: 16px;
+  font-size: 1rem;
   line-height: 1.65;
   color: var(--gray-900);
   background: var(--white);
@@ -87,7 +87,7 @@ body {
 
 .nav-cta {
   background: var(--amber);
-  color: var(--white) !important;
+  color: var(--gray-900) !important;
   padding: 10px 18px;
   white-space: nowrap;
   border-radius: var(--radius);
@@ -169,7 +169,7 @@ body {
 
 .btn-primary {
   background: var(--amber);
-  color: var(--white);
+  color: var(--gray-900);
 }
 
 .btn-primary:hover {
@@ -235,14 +235,14 @@ h2 {
 }
 
 .deliverable-card h3 {
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: var(--green-dark);
   margin-bottom: 8px;
 }
 
 .deliverable-card p {
-  font-size: 0.9rem;
+  font-size: 1rem;
   color: var(--gray-700);
   line-height: 1.6;
 }
@@ -364,7 +364,7 @@ h2 {
 }
 
 .why-point h3 {
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: var(--green-dark);
   margin-bottom: 8px;
@@ -373,7 +373,7 @@ h2 {
 }
 
 .why-point p {
-  font-size: 0.92rem;
+  font-size: 1rem;
   color: var(--gray-700);
   line-height: 1.65;
 }
@@ -393,14 +393,14 @@ h2 {
 }
 
 .cred-item h3 {
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   font-weight: 700;
   color: var(--green-dark);
   margin-bottom: 10px;
 }
 
 .cred-item p {
-  font-size: 0.88rem;
+  font-size: 1rem;
   color: var(--gray-700);
   line-height: 1.65;
 }
@@ -438,7 +438,7 @@ h2 {
   color: var(--gray-700);
   line-height: 1.7;
   margin-bottom: 16px;
-  font-size: 0.97rem;
+  font-size: 1rem;
 }
 
 .contact-link {
@@ -475,7 +475,7 @@ h2 {
   border: 1px solid var(--gray-200);
   border-radius: var(--radius);
   font-family: var(--font-sans);
-  font-size: 0.95rem;
+  font-size: 1rem;
   color: var(--gray-900);
   background: var(--white);
   transition: border-color 0.15s;
@@ -522,13 +522,13 @@ h2 {
 }
 
 .footer-meta {
-  font-size: 0.82rem;
-  color: var(--gray-500);
+  font-size: 0.95rem;
+  color: #c9c2b8;
 }
 
 .footer-copy {
-  font-size: 0.78rem;
-  color: var(--gray-500);
+  font-size: 0.85rem;
+  color: #b5ada3;
   margin-top: 4px;
 }
 
@@ -563,10 +563,14 @@ h2 {
   .site-nav { gap: 16px; }
   .site-nav a:not(.nav-cta) { display: none; }
   .container { padding: 0 16px; }
+  .section { padding: 48px 0; }
+  .section-intro { margin-bottom: 28px; }
+  .fold-content { padding: 24px 20px; }
+  .contact-form { padding: 24px 18px; }
   .header-inner { padding-top: 10px; padding-bottom: 10px; }
   .logo { font-size: 1.05rem; }
   .nav-cta { font-size: 1rem; padding: 11px 14px; }
-  .above-fold { padding: 64px 0 56px; }
+  .above-fold { padding: 28px 0 36px; }
   .contact-container { grid-template-columns: 1fr; gap: 40px; }
   .pricing-grid { grid-template-columns: 1fr; }
   .deliverables-grid { grid-template-columns: 1fr; }
@@ -590,7 +594,7 @@ h2 {
 }
 .map-figure figcaption {
   margin-top: 10px;
-  font-size: 0.88rem;
+  font-size: 0.95rem;
   color: var(--gray-700);
   line-height: 1.6;
 }
