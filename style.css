@@ -405,6 +405,23 @@ h2 {
   line-height: 1.65;
 }
 
+/* --- ANSWERS (consultants) --- */
+.answers { max-width: 680px; }
+.answers dt {
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--green-dark);
+  margin-top: 1.6rem;
+}
+.answers dt:first-child { margin-top: 0; }
+.answers dd {
+  margin: 0.3rem 0 0;
+  font-size: 1.05rem;
+  color: var(--gray-700);
+  line-height: 1.65;
+}
+
 /* --- CONTACT --- */
 .contact-container {
   display: grid;
@@ -422,6 +439,14 @@ h2 {
   line-height: 1.7;
   margin-bottom: 16px;
   font-size: 0.97rem;
+}
+
+.contact-link {
+  display: inline-block;
+  padding: 6px 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--green-dark);
 }
 
 .contact-form {
