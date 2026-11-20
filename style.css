@@ -61,10 +61,12 @@ body {
 
 .logo {
   font-family: var(--font-serif);
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   font-weight: 700;
   color: var(--white);
   letter-spacing: -0.01em;
+  text-decoration: none;
+  white-space: nowrap;
 }
 
 .site-nav {
@@ -86,7 +88,8 @@ body {
 .nav-cta {
   background: var(--amber);
   color: var(--white) !important;
-  padding: 8px 18px;
+  padding: 10px 18px;
+  white-space: nowrap;
   border-radius: var(--radius);
   font-weight: 600 !important;
   transition: background 0.15s !important;
@@ -504,10 +507,18 @@ h2 {
   margin-top: 4px;
 }
 
+@media (max-width: 400px) {
+  .cta-word { display: none; }
+}
+
 /* --- RESPONSIVE --- */
 @media (max-width: 768px) {
   .site-nav { gap: 16px; }
   .site-nav a:not(.nav-cta) { display: none; }
+  .container { padding: 0 16px; }
+  .header-inner { padding-top: 10px; padding-bottom: 10px; }
+  .logo { font-size: 1.05rem; }
+  .nav-cta { font-size: 1rem; padding: 11px 14px; }
   .above-fold { padding: 64px 0 56px; }
   .contact-container { grid-template-columns: 1fr; gap: 40px; }
   .pricing-grid { grid-template-columns: 1fr; }
