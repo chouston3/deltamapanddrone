@@ -16,7 +16,9 @@
 <style>
 .splash-prompt { margin-top: 2.5rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; font-size: 0.85rem; opacity: 0.9; color: #fff; }
 .splash-choices { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1rem; }
-.splash-choice { flex: 0 1 calc(50% - 0.5rem); min-width: 260px; }
+.splash-choice { flex: 0 1 calc(50% - 0.5rem); min-width: min(260px, 100%); }
+.above-fold h1.home-h1 { font-size: clamp(1.55rem, 3.4vw, 2.3rem); }
+.who { color: #fff; font-weight: 600; margin: -12px 0 24px; line-height: 1.6; }
 .splash-choice .btn { width: 100%; box-sizing: border-box; }
 .splash-choice p { margin: 0.6rem 0 0; font-size: 0.95rem; opacity: 0.85; color: #fff; }
 </style>
@@ -38,21 +40,23 @@
 <section class="above-fold" style="background-image: url('assets/img/soybean-field-canopy.webp'); background-size: cover; background-position: center top;">
 <div class="container">
 <div class="fold-content">
-<p class="eyebrow">Sunflower Aerial &bull; Aerial Crop Imaging</p>
-<h1>I show you where to look.</h1>
-<p class="lead">I fly row crops and sod in the Mid-South with a multispectral drone and mark the spots that look different from the rest of the field. You and your agronomist decide what they are. Memphis-based and independent, with no seed, chemicals, or hardware to sell.</p>
+<p class="eyebrow">Farm drone imaging</p>
+<h1 class="home-h1">I fly a camera drone over row-crop fields and mark where the field looks different.</h1>
+<p class="lead">I don't diagnose and I don't make recommendations. You and your consultant decide what a spot is and what to do about it. I sell nothing else: no seed, no chemical, no hardware, no spraying.</p>
+<p class="who">Chip Houston. One-man business in Memphis, Tennessee. FAA Part 107 remote pilot.</p>
+<a href="tel:+19015655123" class="btn btn-primary">Call (901) 565-5123</a>
 <p class="splash-prompt">Which are you?</p>
 <div class="splash-choices">
 <div class="splash-choice">
-<a href="consultants.html" class="btn btn-primary">I'm a crop consultant &rarr;</a>
-<p>Advising growers across multiple operations.</p>
+<a href="/consultants" class="btn btn-primary">I'm a crop consultant &rarr;</a>
+<p>You scout fields for growers.</p>
 </div>
 <div class="splash-choice">
-<a href="farmers.html" class="btn btn-primary">I farm my own ground &rarr;</a>
-<p>Looking at your own fields.</p>
+<a href="/farmers" class="btn btn-primary">I farm or own the ground &rarr;</a>
+<p>Your own fields or your own land.</p>
 </div>
 <div class="splash-choice">
-<a href="turf.html" class="btn btn-primary">I grow sod or manage turf &rarr;</a>
+<a href="/turf" class="btn btn-primary">I grow sod or manage turf &rarr;</a>
 <p>Sod farms and golf courses.</p>
 </div>
 </div>
